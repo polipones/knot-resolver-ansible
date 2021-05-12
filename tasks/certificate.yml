@@ -1,26 +1,25 @@
-- name: Install socat
+- name: Install certbot
   apt:
     pkg:
-      - socat
+      - certbot
     update_cache: yes
     state: present
-
-- name: Install acme.sh script
-  shell:
-    cmd: "wget -O -  https://get.acme.sh | sh -s email={{ dns_letsencrypt_email }}"
-    chdir: /root
+  become: yes
 
 - name: Obtain certificate
   shell:
-    cmd: "acme.sh --issue --standalone --key-file {{ dns_tls_cert_key_directory }}/server-key.pem --cert-file {{ dns_tls_cert_key_directory }}/server-cert.pem -d {{ dns_letsencrypt_hostname }}"
-    chdir: /root
+    cmd: "certbot certonly --standalone --agree-tos -n -m {{ dns_letsencrypt_email }} -d {{ dns_letsencrypt_fqdn }}"
   notify: restart_knot
+  become: yes
 
-- name: Check permissions
-  file:
-    path: "{{ item }}"
+- name: Copy certificates to desired location
+  copy:
+    src: "/etc/letsencrypt/live/{{ dns_letsencrypt_fqdn }}/{{ item }}"
+    dest: "{{ dns_tls_cert_key_directory }}/{{ item }}"
+    remote_src: yes
     owner: knot-resolver
     group: knot-resolver
   loop:
-    - "{{ dns_tls_cert_key_directory }}/server-key.pem"
-    - "{{ dns_tls_cert_key_directory }}/server-cert.pem"
+    - "privkey.pem"
+    - "fullchain.pem"
+  become: yes

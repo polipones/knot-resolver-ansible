@@ -11,7 +11,7 @@ net.listen("{{ addr }}", {{ dns_listen_port_tls }}, { kind = 'tls' })
 
 -- TLS server configuration
 {% if dns_tls_enable %}
-net.tls("{{ dns_tls_cert_key_directory }}/server-cert.pem", "{{ dns_tls_cert_key_directory }}/server-key.pem")
+net.tls("{{ dns_tls_cert_key_directory }}/fullchain.pem", "{{ dns_tls_cert_key_directory }}/privkey.pem")
 {% endif %}
 -- Refer to manual for optimal cache size
 cache.size = {{ dns_cache_size }} * MB
