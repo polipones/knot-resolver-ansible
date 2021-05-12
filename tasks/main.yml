@@ -3,12 +3,19 @@
     msg: "This playbook is only for Debian/Ubuntu"
   when: ansible_distribution != "Ubuntu" and ansible_distribution != "Debian"
 
+- name: Install Knot Resolver
+  include_tasks: install.yml
+  become: yes
+
 - name: Setup fs for in-memory cache
   include_tasks: cache_in_memory.yml
   when: dns_cache_in_memory | bool
+  become: yes
 
-- name: Install Knot Resolver
-  include_tasks: install.yml
+- name: Get certificate for DNS over TLS
+  include_tasks: certificate.yml
+  when: dns_tls_enable | bool
+  become: yes
 
 - name: Configure Knot Resolver
   template:
@@ -18,6 +25,7 @@
     owner: "knot-resolver"
     group: "knot-resolver"
   notify: restart_knot
+  become: yes
 
 - name: Enable and start service
   service:
@@ -25,3 +33,4 @@
     state: started
     enabled: true
   loop: "{{ range(1, dns_num_of_instances + 1, 1)|list }}"
+  become: yes

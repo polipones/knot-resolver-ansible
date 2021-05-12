@@ -4,13 +4,15 @@
 -- Network interface configuration
 {% for addr in dns_listen_addresses %}
 net.listen("{{ addr }}", {{ dns_listen_port_unencrypted }}, { kind = 'dns' })
--- net.listen("{{ addr }}", {{ dns_listen_port_tls }}, { kind = 'tls' })
+{% if dns_tls_enable %}
+net.listen("{{ addr }}", {{ dns_listen_port_tls }}, { kind = 'tls' })
+{% endif %}
 {% endfor %}
 
 -- TLS server configuration
--- TODO
--- net.tls("/etc/knot-resolver/server-cert.pem", "/etc/knot-resolver/server-key.pem")
-
+{% if dns_tls_enable %}
+net.tls("{{ dns_tls_cert_key_directory }}/server-cert.pem", "{{ dns_tls_cert_key_directory }}/server-key.pem")
+{% endif %}
 -- Refer to manual for optimal cache size
 cache.size = {{ dns_cache_size }} * MB
 

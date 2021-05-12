@@ -6,6 +6,14 @@ dns_listen_addresses:
   - "127.0.0.1"
   - "::1"
 dns_listen_port_unencrypted: "53"
+
+# Enable DNS over TLS
+# We have to generate and sign cert from Let's Encrypt, you should have open port 80 in your firewall for web server used by acme script
+dns_tls_enable: true
+dns_tls_cert_key_directory: "/etc/knot-resolver"
+dns_letsencrypt_email: mail@example.com
+# FQDN - fully qualified domain name (cert will be issued for this name)
+dns_letsencrypt_fqdn: resolver.example.com
 dns_listen_port_tls: "853"
 
 ## Cache size in MB (choose based on amount of system memory)

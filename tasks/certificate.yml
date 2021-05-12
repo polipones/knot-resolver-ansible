@@ -1,0 +1,26 @@
+- name: Install socat
+  apt:
+    pkg:
+      - socat
+    update_cache: yes
+    state: present
+
+- name: Install acme.sh script
+  shell:
+    cmd: "wget -O -  https://get.acme.sh | sh -s email={{ dns_letsencrypt_email }}"
+    chdir: /root
+
+- name: Obtain certificate
+  shell:
+    cmd: "acme.sh --issue --standalone --key-file {{ dns_tls_cert_key_directory }}/server-key.pem --cert-file {{ dns_tls_cert_key_directory }}/server-cert.pem -d {{ dns_letsencrypt_hostname }}"
+    chdir: /root
+  notify: restart_knot
+
+- name: Check permissions
+  file:
+    path: "{{ item }}"
+    owner: knot-resolver
+    group: knot-resolver
+  loop:
+    - "{{ dns_tls_cert_key_directory }}/server-key.pem"
+    - "{{ dns_tls_cert_key_directory }}/server-cert.pem"
