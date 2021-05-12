@@ -1,0 +1,27 @@
+###########################################################
+# Resolver default variables
+
+## Listen addresses and ports for DNS service (avoid using wildcards)
+dns_listen_addresses:
+  - "127.0.0.1"
+  - "::1"
+dns_listen_port_unencrypted: "53"
+dns_listen_port_tls: "853"
+
+## Cache size in MB (choose based on amount of system memory)
+# https://knot-resolver.readthedocs.io/en/v5.3.2/daemon-bindings-cache.html#sizing
+dns_cache_size: 512
+
+## Create tmpfs and use cache in memory
+# https://knot-resolver.readthedocs.io/en/v5.3.2/daemon-bindings-cache.html#persistence
+dns_cache_in_memory: true
+
+## Launch multiple instances (recommended same as number of CPU cores, all share same cache)
+# https://knot-resolver.readthedocs.io/en/v5.3.2/systemd-multiinst.html#multiple-instances
+dns_num_of_instances: 2
+
+## Restrict DNS resolving to subnet
+# https://knot-resolver.readthedocs.io/en/stable/quickstart-config.html#limiting-client-access
+dns_only_allowed_subnets: false
+dns_allowed_subnets:
+  - "192.168.0.0/24"

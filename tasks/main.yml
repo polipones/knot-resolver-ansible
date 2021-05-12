@@ -1,0 +1,27 @@
+- name: Check distribution
+  fail:
+    msg: "This playbook is only for Debian/Ubuntu"
+  when: ansible_distribution != "Ubuntu" and ansible_distribution != "Debian"
+
+- name: Setup fs for in-memory cache
+  include_tasks: cache_in_memory.yml
+  when: dns_cache_in_memory | bool
+
+- name: Install Knot Resolver
+  include_tasks: install.yml
+
+- name: Configure Knot Resolver
+  template:
+    src: kresd.conf.j2
+    dest: /etc/knot-resolver/kresd.conf
+    mode: '640'
+    owner: "knot-resolver"
+    group: "knot-resolver"
+  notify: restart_knot
+
+- name: Enable and start service
+  service:
+    name: "kresd@{{ item }}"
+    state: started
+    enabled: true
+  loop: "{{ range(1, dns_num_of_instances + 1, 1)|list }}"

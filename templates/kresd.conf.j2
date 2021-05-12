@@ -1,0 +1,67 @@
+-- Ansible managed
+-- Refer to manual: https://knot-resolver.readthedocs.io/en/stable/
+
+-- Network interface configuration
+{% for addr in dns_listen_addresses %}
+net.listen("{{ addr }}", {{ dns_listen_port_unencrypted }}, { kind = 'dns' })
+-- net.listen("{{ addr }}", {{ dns_listen_port_tls }}, { kind = 'tls' })
+{% endfor %}
+
+-- TLS server configuration
+-- TODO
+-- net.tls("/etc/knot-resolver/server-cert.pem", "/etc/knot-resolver/server-key.pem")
+
+-- Refer to manual for optimal cache size
+cache.size = {{ dns_cache_size }} * MB
+
+{% if dns_cache_in_memory %}
+cache.storage = 'lmdb:///var/cache/knot-resolver'
+{% endif %}
+
+-- load modules
+modules = {
+    'view',
+    'stats',
+    'predict'
+}
+
+-- log statistics every second
+local stat_id = event.recurrent(1 * second, function(evid)
+    log(table_print(stats.list()))
+end)
+
+-- stop printing statistics after first minute
+event.after(1 * minute, function(evid)
+        event.cancel(stat_id)
+end)
+
+-- speed_monitor definition
+-- prints warning if more than 5% of total answers was slow
+function speed_monitor()
+        local previous = stats.list()   -- store statistics in persistent variable
+        return function(evid)
+                local now = stats.list()    -- save actual statistics to variable
+                -- number of total answers between 'now' and 'previous' states
+                local total_increment = now['answer.total'] - previous['answer.total']
+                -- number of slow answers between 'now' and 'previous' states
+                local slow_increment = now['answer.slow'] - previous['answer.slow']
+                -- if percentage of slow answers is bigger than 5%, print warning
+                if slow_increment / total_increment > 0.05 then
+                        log('WARNING! More than 5 %% of queries was slow!')
+                end
+                previous = now
+         end
+end
+
+-- execute speed_monitor every minute
+local monitor_id = event.recurrent(1 * minute, speed_monitor())
+
+{% if dns_only_allowed_subnets %}
+-- whitelist queries identified by subnet
+{% for sub in dns_allowed_subnets %}
+view:addr("{{ sub }}", policy.all(policy.PASS))
+{% endfor %}
+
+-- drop everything that hasn't matched
+view:addr('0.0.0.0/0', policy.all(policy.DROP))
+{% endif %}

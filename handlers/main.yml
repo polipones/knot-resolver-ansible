@@ -1,0 +1,5 @@
+- name: restart_knot
+  service:
+    name: "kresd@{{ item }}"
+    state: restarted
+  loop: "{{ range(1, dns_num_of_instances + 1, 1)|list }}"

@@ -1,0 +1,10 @@
+- name: Add release
+  apt:
+    deb: "https://secure.nic.cz/files/knot-resolver/knot-resolver-release.deb"
+
+- name: Install Knot Resolver
+  apt:
+    pkg:
+      - knot-resolver
+    update_cache: yes
+    state: present
