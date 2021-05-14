@@ -64,4 +64,11 @@ view:addr("{{ sub }}", policy.all(policy.PASS))
 
 -- drop everything that hasn't matched
 view:addr('0.0.0.0/0', policy.all(policy.DROP))
+view:addr('::0/0', policy.all(policy.DROP))
+{% endif %}
+
+{% if dns_explicit_forward_enabled %}
+{% for item in dns_explicit_forward_list %}
+policy.add(policy.suffix(policy.FORWARD('{{ item.nameserver }}'), {todname('{{ item.domain }}.')}))
+{% endfor %}
 {% endif %}

@@ -38,3 +38,9 @@ dns_allowed_subnets:
 dns_statistics_log_enable: true
 # Statistics log interval in minutes
 dns_statistics_log_interval: 3
+
+# Forward queries under specified domain to nameserver
+dns_explicit_forward_enabled: false
+dns_explicit_forward_list:
+  - nameserver: '192.168.0.1' # NS IP
+    domain: 'sub.example.com' # Domain (and its subdomains) being forwarded
