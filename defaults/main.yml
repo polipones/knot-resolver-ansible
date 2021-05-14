@@ -33,3 +33,8 @@ dns_num_of_instances: 2
 dns_only_allowed_subnets: false
 dns_allowed_subnets:
   - "192.168.0.0/24"
+
+# Enable periodic statistics logging
+dns_statistics_log_enable: true
+# Statistics log interval in minutes
+dns_statistics_log_interval: 3

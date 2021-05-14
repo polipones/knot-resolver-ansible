@@ -27,15 +27,13 @@ modules = {
     'predict'
 }
 
--- log statistics every second
-local stat_id = event.recurrent(1 * second, function(evid)
+{% if dns_statistics_log_enable %}
+-- log statistics
+event.recurrent({{ dns_statistics_log_interval }} * minute, function(evid)
     log(table_print(stats.list()))
 end)
 
--- stop printing statistics after first minute
-event.after(1 * minute, function(evid)
-        event.cancel(stat_id)
-end)
+{% endif %}
 
 -- speed_monitor definition
 -- prints warning if more than 5% of total answers was slow
