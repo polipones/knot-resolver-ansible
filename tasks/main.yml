@@ -8,7 +8,6 @@
 
 - name: Setup fs for in-memory cache
   include_tasks: cache_in_memory.yml
-  when: dns_cache_in_memory | bool
 
 - name: Get certificate for DNS over TLS
   include_tasks: certificate.yml

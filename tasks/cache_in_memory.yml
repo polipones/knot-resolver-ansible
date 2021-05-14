@@ -1,8 +1,25 @@
+- name: Stop kres caching service
+  service:
+    name: "kres-cache-gc.service"
+    state: stopped
+    enabled: yes
+
 - name: Mount tmpfs partition in memory
   mount:
-    name: /var/cache/knot-resolver
+    path: /var/cache/knot-resolver
     src: tmpfs
     fstype: tmpfs
     opts: "rw,size={{ dns_cache_size | int + 16 }}M,uid=knot-resolver,gid=knot-resolver,nosuid,nodev,noexec,mode=0700"
     state: mounted
   become: yes
+  when: dns_cache_in_memory | bool
+
+- name: Unmount and remove tmpfs
+  mount:
+    path: /var/cache/knot-resolver
+    state: "{{ item }}"
+  become: yes
+  loop:
+    - unmounted
+    - absent
+  when: not (dns_cache_in_memory | bool)

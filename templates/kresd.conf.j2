@@ -18,10 +18,7 @@ net.tls("{{ dns_tls_cert_key_directory }}/fullchain.pem", "{{ dns_tls_cert_key_d
 {% endif %}
 -- Refer to manual for optimal cache size
 cache.size = {{ dns_cache_size }} * MB
-
-{% if dns_cache_in_memory %}
 cache.storage = 'lmdb:///var/cache/knot-resolver'
-{% endif %}
 
 -- Load modules
 modules = {
@@ -83,5 +80,5 @@ policy.add(policy.suffix(policy.FORWARD({ {{ item.nameservers | map('regex_repla
 
 {% if dns_explicit_forward_all_enabled %}
 -- Forward all queries to specified nameservers
-policy.add(policy.suffix(policy.FORWARD({ {{ dns_explicit_forward_all_list | map('regex_replace', '^(.*)$','"\\1"') | join(',') }} })))
+policy.add(policy.all(policy.FORWARD({ {{ dns_explicit_forward_all_list | map('regex_replace', '^(.*)$','"\\1"') | join(',') }} })))
 {% endif %}
