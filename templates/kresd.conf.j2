@@ -1,4 +1,4 @@
--- Ansible managed
+{{ ansible_managed | comment(decoration='--') }}
 -- Refer to manual: https://knot-resolver.readthedocs.io/en/stable/
 
 -- Network interface configuration
@@ -9,8 +9,8 @@ net.listen("{{ addr }}", {{ dns_listen_port_tls }}, { kind = 'tls' })
 {% endif %}
 {% endfor %}
 
-net.ipv4 = {{ not dns_disable_ipv4 | bool }}
-net.ipv6 = {{ not dns_disable_ipv6 | bool }}
+net.ipv4 = {{ dns_disable_ipv4 | ternary('false', 'true') }}
+net.ipv6 = {{ dns_disable_ipv6 | ternary('false', 'true') }}
 
 -- TLS server configuration
 {% if dns_tls_enable %}
@@ -77,11 +77,11 @@ view:addr('::0/0', policy.all(policy.DROP))
 {% if dns_explicit_forward_domain_enabled %}
 -- Forward these domains to specified nameservers
 {% for item in dns_explicit_forward_domain_list %}
-policy.add(policy.suffix(policy.FORWARD({ {{ item.nameservers | join(',') }} }), {todname('{{ item.domain }}.')}))
+policy.add(policy.suffix(policy.FORWARD({ {{ item.nameservers | map('regex_replace', '^(.*)$','"\\1"') | join(',') }} }), { todname("{{ item.domain }}.") }))
 {% endfor %}
 {% endif %}
 
 {% if dns_explicit_forward_all_enabled %}
 -- Forward all queries to specified nameservers
-policy.add(policy.suffix(policy.FORWARD({ {{ dns_explicit_forward_all_list | join(',') }} })))
+policy.add(policy.suffix(policy.FORWARD({ {{ dns_explicit_forward_all_list | map('regex_replace', '^(.*)$','"\\1"') | join(',') }} })))
 {% endif %}
