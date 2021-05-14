@@ -9,6 +9,9 @@ net.listen("{{ addr }}", {{ dns_listen_port_tls }}, { kind = 'tls' })
 {% endif %}
 {% endfor %}
 
+net.ipv4 = {{ not dns_disable_ipv4 | bool }}
+net.ipv6 = {{ not dns_disable_ipv6 | bool }}
+
 -- TLS server configuration
 {% if dns_tls_enable %}
 net.tls("{{ dns_tls_cert_key_directory }}/fullchain.pem", "{{ dns_tls_cert_key_directory }}/privkey.pem")
@@ -20,7 +23,7 @@ cache.size = {{ dns_cache_size }} * MB
 cache.storage = 'lmdb:///var/cache/knot-resolver'
 {% endif %}
 
--- load modules
+-- Load modules
 modules = {
     'view',
     'stats',
@@ -28,7 +31,7 @@ modules = {
 }
 
 {% if dns_statistics_log_enable %}
--- log statistics
+-- Log statistics
 event.recurrent({{ dns_statistics_log_interval }} * minute, function(evid)
     log(table_print(stats.list()))
 end)
@@ -36,7 +39,7 @@ end)
 {% endif %}
 
 -- speed_monitor definition
--- prints warning if more than 5% of total answers was slow
+-- Prints warning if more than 5% of total answers was slow
 function speed_monitor()
         local previous = stats.list()   -- store statistics in persistent variable
         return function(evid)
@@ -53,22 +56,32 @@ function speed_monitor()
          end
 end
 
--- execute speed_monitor every minute
+-- Execute speed_monitor every minute
 local monitor_id = event.recurrent(1 * minute, speed_monitor())
 
 {% if dns_only_allowed_subnets %}
--- whitelist queries identified by subnet
+-- Whitelist queries identified by subnet
 {% for sub in dns_allowed_subnets %}
 view:addr("{{ sub }}", policy.all(policy.PASS))
 {% endfor %}
 
--- drop everything that hasn't matched
+-- Drop everything that hasn't matched
+{% if not dns_disable_ipv4 %}
 view:addr('0.0.0.0/0', policy.all(policy.DROP))
+{% endif %}
+{% if not dns_disable_ipv6 %}
 view:addr('::0/0', policy.all(policy.DROP))
 {% endif %}
+{% endif %}
 
-{% if dns_explicit_forward_enabled %}
-{% for item in dns_explicit_forward_list %}
-policy.add(policy.suffix(policy.FORWARD('{{ item.nameserver }}'), {todname('{{ item.domain }}.')}))
+{% if dns_explicit_forward_domain_enabled %}
+-- Forward these domains to specified nameservers
+{% for item in dns_explicit_forward_domain_list %}
+policy.add(policy.suffix(policy.FORWARD({ {{ item.nameservers | join(',') }} }), {todname('{{ item.domain }}.')}))
 {% endfor %}
+{% endif %}
+
+{% if dns_explicit_forward_all_enabled %}
+-- Forward all queries to specified nameservers
+policy.add(policy.suffix(policy.FORWARD({ {{ dns_explicit_forward_all_list | join(',') }} })))
 {% endif %}

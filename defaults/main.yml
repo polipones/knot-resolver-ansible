@@ -7,6 +7,11 @@ dns_listen_addresses:
   - "::1"
 dns_listen_port_unencrypted: "53"
 
+## It is recommended to disable IPv6 if your network is not IPv6 ready (should speedup name resolution)
+# https://knot-resolver.readthedocs.io/en/stable/daemon-bindings-net_client.html#ipv4-and-ipv6-usage
+dns_disable_ipv4: false
+dns_disable_ipv6: false
+
 # Enable DNS over TLS
 # We have to generate and sign cert from Let's Encrypt, you should have open port 80 in your firewall for web server used by acme script
 dns_tls_enable: true
@@ -39,8 +44,17 @@ dns_statistics_log_enable: true
 # Statistics log interval in minutes
 dns_statistics_log_interval: 3
 
-# Forward queries under specified domain to nameserver
-dns_explicit_forward_enabled: false
-dns_explicit_forward_list:
-  - nameserver: '192.168.0.1' # NS IP
+# Forward queries for specified domain (and its subdomains) to nameservers
+dns_explicit_forward_domain_enabled: false
+dns_explicit_forward_domain_list:
+  - nameservers:
+      - '192.168.0.1' # NS IP (you can write multiple as list)
     domain: 'sub.example.com' # Domain (and its subdomains) being forwarded
+
+# Forward queries all queries to specified nameservers
+# Will be added to bottom of configuration file (so only queries not matched by prevoius rules will be forwarded to these NS)
+# You can use recommended servers by CZ.NIC: https://www.nic.cz/odvr/
+dns_explicit_forward_all_enabled: true
+dns_explicit_forward_all_list:
+  - '193.17.47.1'   # NS IPs as list
+  - '185.43.135.1'
