@@ -3,6 +3,15 @@
     name: "kres-cache-gc.service"
     state: stopped
     enabled: yes
+  become: yes
+
+- name: Stop kresd services
+  service:
+    name: "kresd@{{ item }}"
+    state: stopped
+    enabled: true
+  loop: "{{ range(1, dns_num_of_instances + 1, 1)|list }}"
+  become: yes
 
 - name: Mount tmpfs partition in memory
   mount:
