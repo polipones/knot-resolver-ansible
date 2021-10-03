@@ -1,0 +1,8 @@
+# Copy certificates to desired location
+cp /etc/letsencrypt/live/{{ dns_letsencrypt_fqdn }}/privkey.pem {{ dns_tls_cert_key_directory }}/privkey.pem
+cp /etc/letsencrypt/live/{{ dns_letsencrypt_fqdn }}/fullchain.pem {{ dns_tls_cert_key_directory }}/fullchain.pem
+
+# Restart resolver service
+{% for instance_num in range(1, dns_num_of_instances + 1, 1)|list %}
+    systemctl restart kresd@{{ instance_num }}.service
+{% endfor %}

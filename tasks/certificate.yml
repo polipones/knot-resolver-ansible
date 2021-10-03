@@ -6,6 +6,24 @@
     state: present
   become: yes
 
+- name: Create hook directory
+  file:
+    path: /etc/letsencrypt/renewal-hooks/deploy
+    state: directory
+    owner: "root"
+    group: "root"
+    mode: 0740
+  become: yes
+
+- name: Copy hook file to server
+  template:
+    src: 10_copy_certs_and_restart_knot.j2
+    dest: /etc/letsencrypt/renewal-hooks/deploy/10_copy_certs_and_restart_knot
+    mode: '740'
+    owner: "root"
+    group: "root"
+  become: yes
+
 - name: Obtain certificate
   shell:
     cmd: "certbot certonly --standalone --agree-tos -n -m {{ dns_letsencrypt_email }} -d {{ dns_letsencrypt_fqdn }}"
