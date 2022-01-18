@@ -74,7 +74,8 @@ view:addr('::0/0', policy.all(policy.DROP))
 {% if dns_explicit_forward_domain_enabled %}
 -- Forward these domains to specified nameservers
 {% for item in dns_explicit_forward_domain_list %}
-policy.add(policy.suffix(policy.FORWARD({ {{ item.nameservers | map('regex_replace', '^(.*)$','"\\1"') | join(',') }} }), { todname("{{ item.domain }}.") }))
+policy.add(policy.suffix(policy.FLAGS({'NO_CACHE', 'NO_EDNS'}), policy.todnames({ {{ item.domains | map('regex_replace', '^(.*)$','"\\1"') | join(',') }} })))
+policy.add(policy.suffix(policy.STUB({ {{ item.nameservers | map('regex_replace', '^(.*)$','"\\1"') | join(',') }} }), policy.todnames({ {{ item.domains | map('regex_replace', '^(.*)$','"\\1"') | join(',') }} })))
 {% endfor %}
 {% endif %}
 
